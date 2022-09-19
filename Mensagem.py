@@ -1,7 +1,11 @@
 import time
 from threading import Thread
-from tkinter import *
-from tkinter import messagebox
+try:
+    from tkinter import *
+    from tkinter import messagebox
+except:
+    input('Parece que o Tkinter não está instalado na sua maquina. Por favor, instale a lib para continuar a execução.')
+    exit()
 
 import pika
 
@@ -28,7 +32,11 @@ while control:
 def receiver():
 
     def chamada(ch, method, propreties, body):
-        lista_mensagem.insert(END, " [x] " + body.decode('utf-8'))
+        if opt == 1:
+            lista_mensagem.insert(END, f"{DESTINATARIO} disse: " + body.decode('utf-8'))
+        else:
+            lista_mensagem.insert(END, " [x] " + body.decode('utf-8'))
+
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
@@ -64,14 +72,13 @@ def send():
 
     if EMGRUPO:
         live = entry_field.get()
-        lista_mensagem.insert(END, f"{REMETENTE} disse: " + live)
         channel.exchange_declare(exchange=GRUPO, exchange_type='fanout')
         channel.basic_publish(exchange=GRUPO, routing_key='', body= f'{REMETENTE}:' + live)
 
     if PRIVADO:
         channel.queue_declare(queue=DESTINATARIO)
         live = entry_field.get()
-        lista_mensagem.insert(END, f"{REMETENTE} disse: " + live)
+        lista_mensagem.insert(END, f"Voce falou: " + live)
         channel.basic_publish(exchange='', routing_key=DESTINATARIO, body= live.encode('utf-8'))
 
     connection.close()
